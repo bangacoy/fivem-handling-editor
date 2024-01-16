@@ -252,7 +252,7 @@ namespace HandlingEditor.Client
 
         #region GUI Event Handlers
 
-        private void GUI_MenuPresetValueChanged(string fieldName, string value, string id)
+        private async void GUI_MenuPresetValueChanged(string fieldName, string value, string id)
         {
             if (!HandlingInfo.FieldsInfo.TryGetValue(fieldName, out BaseFieldInfo fieldInfo))
                 return;
@@ -272,6 +272,10 @@ namespace HandlingEditor.Client
                 else if (id.EndsWith("_z"))
                     CurrentPreset.Fields[fieldName].Z = float.Parse(value);
             }
+            {
+                await ReapplyEngineMods();
+                await ReapplyTransmissionMods();
+            }            
         }
 
         private async void GUI_MenuResetPresetButtonPressed(object sender, EventArgs e)
@@ -282,6 +286,10 @@ namespace HandlingEditor.Client
 
             await Delay(200);
             PresetChanged?.Invoke(this, EventArgs.Empty);
+            {
+                await ReapplyEngineMods();
+                await ReapplyTransmissionMods();
+            }
         }
 
         private async void GUI_MenuSavePersonalPresetButtonPressed(object sender, string presetName)
@@ -323,6 +331,10 @@ namespace HandlingEditor.Client
 
                 PresetChanged?.Invoke(this, EventArgs.Empty);
                 Screen.ShowNotification($"{ScriptName}: Server preset ~b~{presetName}~w~ applied");
+                {
+                    await ReapplyEngineMods();
+                    await ReapplyTransmissionMods();
+                }
             }
             else
                 Screen.ShowNotification($"{ScriptName}: ~r~ERROR~w~ Server preset ~b~{presetName}~w~ corrupted");
@@ -344,6 +356,10 @@ namespace HandlingEditor.Client
 
                 PresetChanged?.Invoke(this, EventArgs.Empty);
                 Screen.ShowNotification($"{ScriptName}: Personal preset ~b~{presetName}~w~ applied");
+                {
+                    await ReapplyEngineMods();
+                    await ReapplyTransmissionMods();
+                }
             }
             else
                 Screen.ShowNotification($"{ScriptName}: ~r~ERROR~w~ Personal preset ~b~{presetName}~w~ corrupted");
@@ -442,6 +458,29 @@ namespace HandlingEditor.Client
             DisableControlAction(1, 27, true); // INPUT_PHONE = DPAD - UP
             DisableControlAction(1, 80, true); // INPUT_VEH_CIN_CAM = B
             DisableControlAction(1, 73, true); // INPUT_VEH_DUCK = A
+        }
+
+        private async Task ReapplyEngineMods()
+        {
+            await Delay(500);
+            int currEngine = GetVehicleMod(CurrentVehicle, 11);
+            SetVehicleModKit(CurrentVehicle, 0);
+            SetVehicleMod(CurrentVehicle, 11, (currEngine + 1) % 3, false);
+            await Delay(100);
+            SetVehicleModKit(CurrentVehicle, 0);
+            SetVehicleMod(CurrentVehicle, 11, currEngine, false);
+            await Delay(100);
+        }
+        private async Task ReapplyTransmissionMods()
+        {
+            await Delay(500);
+            int currTransmission = GetVehicleMod(CurrentVehicle, 13);
+            SetVehicleModKit(CurrentVehicle, 0);
+            SetVehicleMod(CurrentVehicle, 13, (currTransmission + 1) % 3, false);
+            await Delay(100);
+            SetVehicleModKit(CurrentVehicle, 0);
+            SetVehicleMod(CurrentVehicle, 13, currTransmission, false);
+            await Delay(100);
         }
 
         /// <summary>
